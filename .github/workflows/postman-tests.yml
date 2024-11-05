@@ -10,10 +10,10 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@latest
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@latest
       with:
         node-version: '20'
 
@@ -24,7 +24,7 @@ jobs:
       run: newman run ../yuzee/application_test.json --reporters htmlextra --reporter-htmlextra-export report.html
 
     - name: Upload Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@latest
       with:
         name: Test Results
         path: report.html
