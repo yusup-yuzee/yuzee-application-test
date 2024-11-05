@@ -2,7 +2,7 @@ name: Run Postman API Tests
 
 on:
   schedule:
-    - cron: '*/1 * * * *'
+    - cron: '*/5 * * * *'
 
 jobs:
   run-postman-tests:
