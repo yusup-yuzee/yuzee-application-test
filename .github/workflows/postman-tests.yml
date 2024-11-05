@@ -1,0 +1,30 @@
+name: Run Postman API Tests
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+
+jobs:
+  run-postman-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    - name: Install Newman
+      run: npm install -g newman newman-reporter-htmlextra
+
+    - name: Run Postman Collection
+      run: newman run yuzee/application_test.json --reporters htmlextra --reporter-htmlextra-export report.html
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v2
+      with:
+        name: Test Results
+        path: report.html
