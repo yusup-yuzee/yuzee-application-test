@@ -403,6 +403,7 @@
 									"if (jsonData.data && jsonData.data.length > 0) {\r",
 									"    pm.collectionVariables.set(`institutionId${currentInstitutionCount}`, jsonData.data[0].institute_id);\r",
 									"    console.log(`Saved institutionId${currentInstitutionCount}: ${jsonData.data[0].institute_id}`);\r",
+									"    console.log(jsonData);\r",
 									"} else {\r",
 									"    console.log(\"No institution data returned in the response\");\r",
 									"}\r",
@@ -535,30 +536,6 @@
 									"    // Set `currentInstitutionId` based on the current course index\r",
 									"    let currentInstitutionId = pm.collectionVariables.get(`institutionId${currentCourseIndex + 1}`);\r",
 									"    pm.collectionVariables.set(\"currentInstitutionId\", currentInstitutionId);\r",
-									"\r",
-									"    // Set request body for course creation\r",
-									"    pm.request.body.raw = JSON.stringify({\r",
-									"        categories: [\r",
-									"            {\r",
-									"                name: \"UNDERGRADUATE\",\r",
-									"                display_name: \"Undergraduate\"\r",
-									"            }\r",
-									"        ],\r",
-									"        course_code: `ABCD${pm.variables.get(\"randomInt\")}`,\r",
-									"        course_type: \"STANDARD_COURSE\",\r",
-									"        description: `${pm.variables.get(\"randomLoremSentence\")} ${pm.variables.get(\"randomLoremSentence\")}`,\r",
-									"        name: `${pm.variables.get(\"randomJobArea\")} Course`,\r",
-									"        faculty_id: \"3ed56433-1a16-44ce-a23c-862032a91aa5\",\r",
-									"        level_id: \"71636627-502e-487c-b6f0-5d40ce740e67\",\r",
-									"        provider_codes: [\r",
-									"            {\r",
-									"                name: \"CRICOS\",\r",
-									"                value: `A${pm.variables.get(\"randomInt\")}`\r",
-									"            }\r",
-									"        ],\r",
-									"        target_audience: \"BOTH\",\r",
-									"        vocational_type: \"\"\r",
-									"    });\r",
 									"\r",
 									"    // Set request to create the next course\r",
 									"    pm.collectionVariables.set(\"currentCourseIndex\", currentCourseIndex + 1);\r",
@@ -1571,7 +1548,7 @@
 									"    pm.collectionVariables.unset(\"currentCourseIndex\");\r",
 									"    pm.collectionVariables.unset(\"currentCourseId\");\r",
 									"    pm.collectionVariables.unset(\"currentInstitutionId\");\r",
-									"    pm.execution.setNextRequest(\"Create RMO Application\");\r",
+									"    pm.execution.setNextRequest(\"Display Course\");\r",
 									"}\r",
 									""
 								],
@@ -1665,6 +1642,116 @@
 									"key": "status",
 									"value": "ACTIVE"
 								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Display Course",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Initialize the current course index\r",
+									"let currentCourseIndex = pm.collectionVariables.get(\"currentCourseIndex\") || 0;\r",
+									"\r",
+									"// Retrieve total number of courses\r",
+									"const totalCourses = pm.collectionVariables.get(\"totalInstitutions\");\r",
+									"const loginToken = pm.collectionVariables.get(\"loginToken\");\r",
+									"\r",
+									"console.log(`Total Courses: ${totalCourses}`);\r",
+									"console.log(`Current Course Index: ${currentCourseIndex}`);\r",
+									"\r",
+									"// Check if there are more courses to process\r",
+									"if (currentCourseIndex < totalCourses) {\r",
+									"    // Retrieve the current course ID from the collection variables\r",
+									"    const currentCourseId = pm.collectionVariables.get(`courseId${currentCourseIndex + 1}`);\r",
+									"    const currentInstitutionId = pm.collectionVariables.get(`institutionId${currentCourseIndex + 1}`);\r",
+									"\r",
+									"    if (currentCourseId && currentInstitutionId) {\r",
+									"        // Set the current course and institution IDs for the request\r",
+									"        pm.collectionVariables.set(\"currentCourseId\", currentCourseId);\r",
+									"        pm.collectionVariables.set(\"currentInstitutionId\", currentInstitutionId);\r",
+									"\r",
+									"        // Log the current course, institution IDs, and login token to the console\r",
+									"        console.log(`Processing Course ID: ${currentCourseId}`);\r",
+									"        console.log(`Processing Institution ID: ${currentInstitutionId}`);\r",
+									"        console.log(`Processing Token: ${loginToken}`);\r",
+									"\r",
+									"        // Increment the index for the next iteration\r",
+									"        pm.collectionVariables.set(\"currentCourseIndex\", currentCourseIndex + 1);\r",
+									"\r",
+									"        // Set the request to repeat for the next course\r",
+									"        pm.execution.setNextRequest(pm.info.requestName); // Repeat the same request\r",
+									"    } else {\r",
+									"        console.error(\"Missing course or institution ID at index\", currentCourseIndex);\r",
+									"        // Optionally set to null or handle the error gracefully\r",
+									"        pm.execution.setNextRequest(\"Create RMO Application\");\r",
+									"    }\r",
+									"} else {\r",
+									"    pm.collectionVariables.unset(\"currentCourseIndex\");\r",
+									"    pm.execution.setNextRequest(\"Create RMO Application\");\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let jsonData = pm.response.json();\r",
+									"console.log(jsonData.data);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{loginToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "UserId",
+								"value": "{{institutionOwnerId}}",
+								"type": "text"
+							},
+							{
+								"key": "EntityId",
+								"value": "{{currentInstitutionId}}",
+								"type": "text"
+							},
+							{
+								"key": "EntityType",
+								"value": "INSTITUTE",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/institute/api/v1/course/{{currentCourseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"institute",
+								"api",
+								"v1",
+								"course",
+								"{{currentCourseId}}"
 							]
 						}
 					},
@@ -2629,7 +2716,7 @@
 		},
 		{
 			"key": "institutionOwnerEmail",
-			"value": "yusuprejepov2002@gmail.com",
+			"value": "exclusive.guan.zojr@flashpost.net",
 			"type": "string"
 		},
 		{
@@ -2654,7 +2741,7 @@
 		},
 		{
 			"key": "institutionOwnerId",
-			"value": "c6b3078f-bc21-4604-b122-f6f2e3dcd067",
+			"value": "0c666ed9-2b88-42e5-b015-d7868223fe4e",
 			"type": "string"
 		},
 		{
