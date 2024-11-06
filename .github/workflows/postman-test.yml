@@ -20,8 +20,14 @@ jobs:
     - name: Install Newman
       run: npm install -g newman newman-reporter-htmlextra
 
+    - name: Fetch Latest Postman Collection
+      env:
+        POSTMAN_COLLECTION_URL: ${{ secrets.POSTMAN_COLLECTION_URL }}
+      run: |
+        curl -X GET "$POSTMAN_COLLECTION_URL" -o application_test.json
+
     - name: Run Postman Collection
-      run: newman run yuzee/application_test.json --reporters htmlextra --reporter-htmlextra-export report.html
+      run: newman run application_test.json --reporters htmlextra --reporter-htmlextra-export report.html
 
     - name: Upload Test Results
       uses: actions/upload-artifact@v4
